@@ -1,0 +1,109 @@
+---
+title: "Operaciones con datos de atributos"
+author: "Nayely Araya Valerin & Kris Morales Alvarado"
+format: html
+toc: true
+lang: es
+theme: yeti
+
+---
+# Carga de paquetes
+
+```{r}
+#| label: carga-paquetes
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(DT)
+library(sf)
+library(terra)
+library(leaflet)
+library(leaflet.extras)
+library(leafem)
+```
+
+# Carga de datos
+
+```{r}
+#| label: carga-datos
+#| message: false
+#| warning: false
+
+cantones <- 
+  st_read("cantones_2020.geojson")
+```
+
+## Casos positivos de Covid en cantones
+
+```{r}
+#| label: carga-datos-covid
+#| message: false
+#| warning: false
+
+covid_positivos_cantones <- 
+  read_delim(
+    file = "05_30_22_CSV_POSITIVOS.csv",
+    delim = ";",
+    locale = locale(encoding = "WINDOWS-1252"), 
+    col_select = c("cod_provin", "provincia", "cod_canton", "canton", "30/05/2022"))
+
+# Se remueve la fila con canton == "Otros"
+covid_positivos_cantones <-
+  covid_positivos_cantones |>
+  filter(canton != "Otros")
+
+# Cambio de nombre de columnas
+covid_positivos_cantones <-
+  covid_positivos_cantones %>%
+  rename(positivos_20220530 = '30/05/2022')
+```
+
+# Datos vectoriales
+
+## El método select ()
+
+```{r}
+#| label: select-01
+
+# Selección de las colimnas de provincias, cantón y código de cantón
+cantones |>
+  st_drop_geometry() |>
+  select(provincia, canton, cod_canton)
+```
+
+### El método slice ()
+
+```{r}
+#| label: slice-01
+
+cantones |>
+  st_drop_geometry() |>
+  select(provincia, canton, cod_canton) |>
+  slice(20:30)
+```
+
+### El método filter ()
+
+```{r}
+#| label: filter-01
+
+cantones |>
+  filter(provincia == "Alajuela") |>
+  select(provincia, canton, cod_canton)
+```
+
+###La funciones group () y summarize ()
+
+```{r}
+#| label: group-01
+
+#Suma de aréas de cantones por provincia
+cantones |>
+  st_drop_geometry() |>
+  group_by(provincia) |>
+  summarize(area_km2 = sum(area, na.rm = TRUE)) |>
+  arrange(area_km2)
+
+```
+
